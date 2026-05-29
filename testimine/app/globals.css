@@ -67,7 +67,7 @@ select {
   color: #374151;
 }
 
-/* Save button — red when active */
+/* Save button */
 .save-button {
   font-size: 26px;
   transition: transform 0.15s ease, color 0.15s ease;
@@ -78,7 +78,7 @@ select {
 }
 
 .save-button.saved {
-  color: #e11d48;
+  color: #1d72e1;
 }
 
 .content {

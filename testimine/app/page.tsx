@@ -140,9 +140,9 @@ export default function Page() {
   }
 
   function planIcon(type: ViewType) {
-    if (type === "class") return "♙";
-    if (type === "teacher") return "✎";
-    return "⌂";
+    if (type === "class") return "Placeholder icon";
+    if (type === "teacher") return "Placeholder icon";
+    return "Placeholder icon";
   }
 
   const subjectColorMap = useMemo(() => {
@@ -267,26 +267,25 @@ export default function Page() {
             className="bottom-nav-item"
             onClick={() => setActiveTab("home")}
           >
-            <span>⌂</span>
+            <span>Placeholder icon</span>
             <p>Avaleht</p>
           </div>
           <div
             className="bottom-nav-item"
             onClick={() => setActiveTab("schedule")}
           >
-            <span>♙</span>
+            <span>Placeholder icon</span>
             <p>Tunniplaan</p>
           </div>
           <div className="bottom-nav-item active">
-            <span>♥</span>
+            <span>Placeholder icon</span>
             <p>Salvestatud</p>
           </div>
         </nav>
       </div>
     );
   }
-
-  // ── Main schedule page ────────────────────────────────────────────
+  // Main schedule page
   return (
     <div className="page">
       <header className="topbar">
@@ -318,7 +317,7 @@ export default function Page() {
             onClick={toggleSave}
             title={isSaved() ? "Eemalda salvestatud" : "Salvesta tunniplaan"}
           >
-            {isSaved() ? "♥" : "♡"}
+            {isSaved() ? "Unsave" : "Save"}
           </button>
         </div>
 
@@ -465,11 +464,11 @@ export default function Page() {
           className="bottom-nav-item"
           onClick={() => setActiveTab("home")}
         >
-          <span>⌂</span>
+          <span>Placeholder icon</span>
           <p>Avaleht</p>
         </div>
         <div className="bottom-nav-item active">
-          <span>♙</span>
+          <span>Placeholder icon</span>
           <p>
             {viewType === "class"
               ? "Klass"
@@ -482,7 +481,7 @@ export default function Page() {
           className="bottom-nav-item"
           onClick={() => setActiveTab("saved")}
         >
-          <span>{savedPlans.length > 0 ? "♥" : "♡"}</span>
+          <span>{savedPlans.length > 0 ? "Placeholder icon" : "Placeholder icon"}</span>
           <p>Salvestatud{savedPlans.length > 0 ? ` (${savedPlans.length})` : ""}</p>
         </div>
       </nav>
