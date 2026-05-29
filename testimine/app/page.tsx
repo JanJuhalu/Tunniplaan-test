@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import timetable from "./parser/tunniplaan.json";
 
 type ViewType = "class" | "teacher" | "room";
+type NavTab = "home" | "schedule" | "saved";
 
 type ScheduleItem = {
   id: string;
@@ -22,6 +23,12 @@ type SubjectColor = {
   name: string;
   forecolor: string;
   backcolor: string;
+};
+
+type SavedPlan = {
+  type: ViewType;
+  value: string;
+  savedAt: string;
 };
 
 const days = [
@@ -44,6 +51,10 @@ function lessonTimeRange(lesson: ScheduleItem) {
   return `${lesson.algus} - ${lesson.lopp}`;
 }
 
+function savedKey(type: ViewType, value: string) {
+  return `${type}::${value}`;
+}
+
 export default function Page() {
   const events = timetable.events as ScheduleItem[];
   const classes = timetable.classes as string[];
@@ -51,30 +62,99 @@ export default function Page() {
   const rooms = timetable.rooms as string[];
   const subjects = timetable.subjects as SubjectColor[];
 
+  const [activeTab, setActiveTab] = useState<NavTab>("schedule");
   const [viewType, setViewType] = useState<ViewType>("class");
   const [selectedClass, setSelectedClass] = useState(classes[0] || "");
   const [selectedTeacher, setSelectedTeacher] = useState(teachers[0] || "");
   const [selectedRoom, setSelectedRoom] = useState(rooms[0] || "");
   const [mobileDayIndex, setMobileDayIndex] = useState(0);
+  const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
+
+  // Load saved plans from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("tunniplaan_saved");
+      if (stored) setSavedPlans(JSON.parse(stored));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function persistSaved(plans: SavedPlan[]) {
+    setSavedPlans(plans);
+    try {
+      localStorage.setItem("tunniplaan_saved", JSON.stringify(plans));
+    } catch {
+      // ignore
+    }
+  }
+
+  function currentKey() {
+    if (viewType === "class") return savedKey("class", selectedClass);
+    if (viewType === "teacher") return savedKey("teacher", selectedTeacher);
+    return savedKey("room", selectedRoom);
+  }
+
+  function isSaved() {
+    return savedPlans.some(
+      (p) => savedKey(p.type, p.value) === currentKey()
+    );
+  }
+
+  function toggleSave() {
+    const key = currentKey();
+    if (isSaved()) {
+      persistSaved(savedPlans.filter((p) => savedKey(p.type, p.value) !== key));
+    } else {
+      const value =
+        viewType === "class"
+          ? selectedClass
+          : viewType === "teacher"
+          ? selectedTeacher
+          : selectedRoom;
+      persistSaved([
+        ...savedPlans,
+        { type: viewType, value, savedAt: new Date().toISOString() },
+      ]);
+    }
+  }
+
+  function removeSaved(plan: SavedPlan) {
+    persistSaved(
+      savedPlans.filter((p) => savedKey(p.type, p.value) !== savedKey(plan.type, plan.value))
+    );
+  }
+
+  function openSaved(plan: SavedPlan) {
+    setViewType(plan.type);
+    if (plan.type === "class") setSelectedClass(plan.value);
+    else if (plan.type === "teacher") setSelectedTeacher(plan.value);
+    else setSelectedRoom(plan.value);
+    setActiveTab("schedule");
+  }
+
+  function planLabel(plan: SavedPlan) {
+    if (plan.type === "class") return `Klass ${plan.value}`;
+    if (plan.type === "teacher") return `Õpetaja ${plan.value}`;
+    return `Ruum ${plan.value}`;
+  }
+
+  function planIcon(type: ViewType) {
+    if (type === "class") return "♙";
+    if (type === "teacher") return "✎";
+    return "⌂";
+  }
 
   const subjectColorMap = useMemo(() => {
     const map = new Map<string, SubjectColor>();
-    subjects.forEach((subject) => {
-      map.set(subject.name, subject);
-    });
+    subjects.forEach((subject) => map.set(subject.name, subject));
     return map;
   }, [subjects]);
 
   const filteredEvents = useMemo(() => {
     return events.filter((lesson) => {
-      if (viewType === "class") {
-        return lesson.klass.split(" ").includes(selectedClass);
-      }
-
-      if (viewType === "teacher") {
-        return lesson.opetaja === selectedTeacher;
-      }
-
+      if (viewType === "class") return lesson.klass.split(" ").includes(selectedClass);
+      if (viewType === "teacher") return lesson.opetaja === selectedTeacher;
       return lesson.ruum === selectedRoom;
     });
   }, [events, viewType, selectedClass, selectedTeacher, selectedRoom]);
@@ -95,7 +175,6 @@ export default function Page() {
 
   function getSubjectStyles(subjectName: string) {
     const found = subjectColorMap.get(subjectName);
-
     return {
       backgroundColor: found?.backcolor || "#3b82f6",
       color: found?.forecolor || "#000000",
@@ -115,21 +194,105 @@ export default function Page() {
   }
 
   function goPreviousDay() {
-    setMobileDayIndex((current) => (current === 0 ? days.length - 1 : current - 1));
+    setMobileDayIndex((c) => (c === 0 ? days.length - 1 : c - 1));
   }
 
   function goNextDay() {
-    setMobileDayIndex((current) => (current === days.length - 1 ? 0 : current + 1));
+    setMobileDayIndex((c) => (c === days.length - 1 ? 0 : c + 1));
   }
 
+  // ── Saved plans page ──────────────────────────────────────────────
+  if (activeTab === "saved") {
+    return (
+      <div className="page">
+        <header className="topbar">
+          <div className="topbar-left">
+            <span>Tunniplaan</span>
+          </div>
+        </header>
+
+        <main className="content">
+          <div className="view-header">
+            <div className="view-header-left">
+              <div>
+                <h1 className="view-title">Salvestatud</h1>
+                <p className="view-subtitle">Sinu salvestatud tunniplaanid</p>
+              </div>
+            </div>
+          </div>
+
+          {savedPlans.length === 0 ? (
+            <div className="saved-empty">
+              <div className="saved-empty-icon">♡</div>
+              <p className="saved-empty-title">Salvestatud plaane pole</p>
+              <p className="saved-empty-sub">
+                Tunniplaanil vajuta ♡, et see siia salvestada.
+              </p>
+            </div>
+          ) : (
+            <div className="saved-list">
+              {savedPlans.map((plan) => (
+                <div key={savedKey(plan.type, plan.value)} className="saved-card">
+                  <button
+                    className="saved-card-main"
+                    onClick={() => openSaved(plan)}
+                  >
+                    <span className="saved-card-icon">{planIcon(plan.type)}</span>
+                    <div className="saved-card-info">
+                      <span className="saved-card-label">{planLabel(plan)}</span>
+                      <span className="saved-card-type">
+                        {plan.type === "class"
+                          ? "Klass"
+                          : plan.type === "teacher"
+                          ? "Õpetaja"
+                          : "Ruum"}
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    className="saved-card-remove"
+                    onClick={() => removeSaved(plan)}
+                    aria-label="Eemalda"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+
+        <nav className="bottom-nav">
+          <div
+            className="bottom-nav-item"
+            onClick={() => setActiveTab("home")}
+          >
+            <span>⌂</span>
+            <p>Avaleht</p>
+          </div>
+          <div
+            className="bottom-nav-item"
+            onClick={() => setActiveTab("schedule")}
+          >
+            <span>♙</span>
+            <p>Tunniplaan</p>
+          </div>
+          <div className="bottom-nav-item active">
+            <span>♥</span>
+            <p>Salvestatud</p>
+          </div>
+        </nav>
+      </div>
+    );
+  }
+
+  // ── Main schedule page ────────────────────────────────────────────
   return (
     <div className="page">
       <header className="topbar">
         <div className="topbar-left">
-          <span className="calendar-icon">📅</span>
           <span>Tunniplaan</span>
         </div>
-
         <div className="topbar-right">
           <button className="icon-button" aria-label="Otsi">
             ⌕
@@ -143,15 +306,19 @@ export default function Page() {
             <button className="back-button" aria-label="Tagasi">
               ‹
             </button>
-
             <div>
               <h1 className="view-title">{getTitle()}</h1>
               <p className="view-subtitle">Nädala tunniplaan</p>
             </div>
           </div>
 
-          <button className="icon-button desktop-only" aria-label="Salvesta">
-            ♡
+          <button
+            className={`icon-button save-button${isSaved() ? " saved" : ""}`}
+            aria-label={isSaved() ? "Eemalda salvestatud" : "Salvesta"}
+            onClick={toggleSave}
+            title={isSaved() ? "Eemalda salvestatud" : "Salvesta tunniplaan"}
+          >
+            {isSaved() ? "♥" : "♡"}
           </button>
         </div>
 
@@ -186,9 +353,7 @@ export default function Page() {
               onChange={(e) => setSelectedClass(e.target.value)}
             >
               {classes.map((klass) => (
-                <option key={klass} value={klass}>
-                  {klass}
-                </option>
+                <option key={klass} value={klass}>{klass}</option>
               ))}
             </select>
           )}
@@ -200,9 +365,7 @@ export default function Page() {
               onChange={(e) => setSelectedTeacher(e.target.value)}
             >
               {teachers.map((teacher) => (
-                <option key={teacher} value={teacher}>
-                  {teacher}
-                </option>
+                <option key={teacher} value={teacher}>{teacher}</option>
               ))}
             </select>
           )}
@@ -214,9 +377,7 @@ export default function Page() {
               onChange={(e) => setSelectedRoom(e.target.value)}
             >
               {rooms.map((room) => (
-                <option key={room} value={room}>
-                  {room}
-                </option>
+                <option key={room} value={room}>{room}</option>
               ))}
             </select>
           )}
@@ -236,15 +397,12 @@ export default function Page() {
                   ))}
                 </tr>
               </thead>
-
               <tbody>
                 {timeSlots.map((slot) => (
                   <tr key={slot}>
                     <td className="time-col">{slot}</td>
-
                     {days.map((day) => {
                       const lesson = getLessonForCell(day.id, slot);
-
                       return (
                         <td key={`${day.id}-${slot}`} className="slot-cell">
                           {lesson ? (
@@ -255,9 +413,6 @@ export default function Page() {
                               <div className="lesson-subject">{lesson.aine}</div>
                               <div className="lesson-meta">{lesson.opetaja}</div>
                               <div className="lesson-meta">Ruum: {lesson.ruum}</div>
-                              <div className="lesson-meta">
-                                {lesson.algus} - {lesson.lopp}
-                              </div>
                             </div>
                           ) : null}
                         </td>
@@ -272,18 +427,12 @@ export default function Page() {
 
         <section className="mobile-schedule">
           <div className="day-switcher">
-            <button className="icon-button" onClick={goPreviousDay}>
-              ‹
-            </button>
-
+            <button className="icon-button" onClick={goPreviousDay}>‹</button>
             <div className="day-switcher-center">
               <h2>{mobileDay.name}</h2>
               <p>{mobileDay.date}</p>
             </div>
-
-            <button className="icon-button" onClick={goNextDay}>
-              ›
-            </button>
+            <button className="icon-button" onClick={goNextDay}>›</button>
           </div>
 
           <div className="lesson-list">
@@ -296,7 +445,6 @@ export default function Page() {
                     <strong>{lesson.algus}</strong>
                     <span>{lesson.lopp}</span>
                   </div>
-
                   <div
                     className="lesson-card mobile-card"
                     style={getSubjectStyles(lesson.aine)}
@@ -313,11 +461,13 @@ export default function Page() {
       </main>
 
       <nav className="bottom-nav">
-        <div className="bottom-nav-item">
+        <div
+          className="bottom-nav-item"
+          onClick={() => setActiveTab("home")}
+        >
           <span>⌂</span>
           <p>Avaleht</p>
         </div>
-
         <div className="bottom-nav-item active">
           <span>♙</span>
           <p>
@@ -328,10 +478,12 @@ export default function Page() {
               : "Ruum"}
           </p>
         </div>
-
-        <div className="bottom-nav-item">
-          <span>♡</span>
-          <p>Salvestatud</p>
+        <div
+          className="bottom-nav-item"
+          onClick={() => setActiveTab("saved")}
+        >
+          <span>{savedPlans.length > 0 ? "♥" : "♡"}</span>
+          <p>Salvestatud{savedPlans.length > 0 ? ` (${savedPlans.length})` : ""}</p>
         </div>
       </nav>
     </div>
