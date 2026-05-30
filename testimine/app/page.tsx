@@ -224,10 +224,10 @@ export default function Page() {
 
           {savedPlans.length === 0 ? (
             <div className="saved-empty">
-              <div className="saved-empty-icon">(save icon)</div>
+              <div className="saved-empty-icon">save icon</div>
               <p className="saved-empty-title">Salvestatud plaane pole</p>
               <p className="saved-empty-sub">
-                Tunniplaanil vajuta (save icon), et see siia salvestada.
+                Tunniplaanil vajuta save icon, et see siia salvestada.
               </p>
             </div>
           ) : (
