@@ -239,7 +239,7 @@ export default function Page() {
   const dayName = ESTONIAN_DAYS[now.getDay()];
   const dateStr = `${dayName}, ${now.getDate()}. ${ESTONIAN_MONTHS[now.getMonth()]}`;
  
-  // ── Search overlay ─────────────────────────────────────────────────
+  // SEARCH FUNCTION OVERLAY
   const SearchOverlay = () => (
     <div className="search-overlay" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}>
       <div className="search-modal" onClick={(e) => e.stopPropagation()}>
@@ -274,7 +274,7 @@ export default function Page() {
     </div>
   );
  
-  // ── Timetable with merged cells ────────────────────────────────────
+  // CELLS MERGING IN TIMETABLE
   const MergedTimetable = () => {
     // Build 2D grid: grid[slotIdx][dayIdx]
     const grid = timeSlots.map((slot) =>
@@ -292,7 +292,6 @@ export default function Page() {
             {days.map((day) => (
               <th key={day.id}>
                 <span className="day-header">{day.name}</span>
-                <span className="day-date">{day.date}</span>
               </th>
             ))}
           </tr>
@@ -361,10 +360,8 @@ export default function Page() {
  
         <main className="content home-content">
           <div className="home-hero-text">
-            <h1 className="home-school-name">Pelgulinna Gümnaasium</h1>
-            <p className="home-year">Tunniplaan 2025/2026</p>
+            <h1 className="home-school-name">Pelgulinna Kool</h1>
           </div>
- 
           <div className="home-clock-card">
             <div className="home-clock-top">
               <span className="home-clock-icon">(icon)</span>
@@ -383,7 +380,7 @@ export default function Page() {
                 <span className="home-nav-title">Klassi tunniplaan</span>
                 <span className="home-nav-sub">Vaata oma klassi tundide ajakava</span>
               </div>
-              <span className="home-nav-arrow">›</span>
+              <span className="home-nav-arrow"></span>
             </button>
  
             <button className="home-nav-card" onClick={() => { setViewType("teacher"); setActiveTab("schedule"); }}>
@@ -589,7 +586,7 @@ export default function Page() {
       </main>
  
       <nav className="bottom-nav">
-        <div className="bottom-nav-item" onClick={() => setActiveTab("home")}><span>⌂</span><p>Avaleht</p></div>
+        <div className="bottom-nav-item" onClick={() => setActiveTab("home")}><span>(icon)</span><p>Avaleht</p></div>
         <div className="bottom-nav-item active">
           <span>(icon)</span>
           <p>{viewType === "class" ? "Klass" : viewType === "teacher" ? "Õpetaja" : "Ruum"}</p>
