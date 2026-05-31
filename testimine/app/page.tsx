@@ -1,3 +1,4 @@
+
 "use client";
  
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -91,10 +92,10 @@ export default function Page() {
   const subjects = timetable.subjects as SubjectColor[];
  
   const [activeTab, setActiveTab] = useState<NavTab>("home");
+
+  const [activeTab, setActiveTab] = useState<NavTab>("schedule");
   const [viewType, setViewType] = useState<ViewType>("class");
   const [selectedClass, setSelectedClass] = useState(classes[0] || "");
-  const [selectedTeacher, setSelectedTeacher] = useState(teachers[0] || "");
-  const [selectedRoom, setSelectedRoom] = useState(rooms[0] || "");
   const [mobileDayIndex, setMobileDayIndex] = useState(0);
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -208,6 +209,16 @@ export default function Page() {
   const mobileLessons = useMemo(() => {
     return filteredEvents
       .filter((l) => l.paev === mobileDay.id)
+
+  const classLessons = useMemo(() => {
+    return events.filter((lesson) =>
+      lesson.klass.split(" ").includes(selectedClass)
+    );
+  }, [events, selectedClass]);
+
+  const mobileLessons = useMemo(() => {
+    return classLessons
+      .filter((lesson) => lesson.paev === mobileDay.id)
       .sort((a, b) => Number(a.tund) - Number(b.tund));
   }, [filteredEvents, mobileDay]);
  
@@ -510,8 +521,8 @@ export default function Page() {
           <div className="view-header-left">
             <button className="back-button" onClick={() => setActiveTab("home")}>‹</button>
             <div>
-              <h1 className="view-title">{getTitle()}</h1>
-              <p className="view-subtitle">Nädala tunniplaan</p>
+              <h1 className="view-title">Klassi tunniplaan</h1>
+              <p className="view-subtitle">Päeva tunniplaan</p>
             </div>
           </div>
           <button
@@ -574,6 +585,13 @@ export default function Page() {
                     <span>{lesson.lopp}</span>
                   </div>
                   <div className="lesson-card mobile-card" style={getSubjectStyles(lesson.aine)}>
+                  <div
+                    className="lesson-card mobile-card"
+                    style={{
+                      backgroundColor: "#e5e7eb",
+                      color: "#111827",
+                    }}
+                  >
                     <div className="lesson-subject">{lesson.aine}</div>
                     <div className="lesson-meta">{lesson.opetaja}</div>
                     <div className="lesson-meta">Ruum: {lesson.ruum}</div>

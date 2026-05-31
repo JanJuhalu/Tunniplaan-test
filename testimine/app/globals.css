@@ -313,6 +313,9 @@ button, select { font: inherit; }
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 36px 100px;
 }
 
 .badge-class   { background: #eff6ff; color: #2563eb; }
@@ -375,6 +378,9 @@ button, select { font: inherit; }
 }
 
 .selector-block { margin-bottom: 20px; }
+.selector-block {
+  margin-bottom: 20px;
+}
 
 .selector-label {
   display: block;
@@ -527,6 +533,19 @@ button, select { font: inherit; }
 }
 
 .mobile-card { min-height: 88px; }
+.lesson-card {
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.mobile-card {
+  min-height: 88px;
+}
 
 /* ── Saved page ─────────────────────────────────────── */
 
@@ -647,4 +666,62 @@ button, select { font: inherit; }
   .search-overlay { padding-top: 0; align-items: flex-end; }
   .search-modal { border-radius: 16px 16px 0 0; margin: 0; max-width: 100%; }
   .search-results { max-height: 50vh; }
+@media (max-width: 640px) {
+  .topbar {
+    height: 56px;
+    padding: 0 14px;
+  }
+
+  .topbar-left {
+    font-size: 22px;
+  }
+
+  .calendar-icon {
+    font-size: 18px;
+  }
+
+  .content {
+    padding: 18px 14px 88px;
+  }
+
+  .view-header-left {
+    gap: 12px;
+  }
+
+  .back-button {
+    font-size: 24px;
+  }
+
+  .view-title {
+    font-size: 18px;
+  }
+
+  .view-subtitle {
+    font-size: 13px;
+  }
+
+  .selector {
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .day-switcher-center h2 {
+    font-size: 18px;
+  }
+
+  .lesson-row {
+    grid-template-columns: 82px 1fr;
+  }
+
+  .lesson-card {
+    padding: 9px;
+  }
+
+  .lesson-subject {
+    font-size: 14px;
+  }
+
+  .lesson-meta {
+    font-size: 12px;
+  }
 }
